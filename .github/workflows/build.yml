@@ -11,15 +11,22 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Ekstrak ZIP bila ada
+        run: |
+          for z in *.zip; do
+            [ -f "$z" ] && unzip -oq "$z" -d extracted
+          done || true
+
       - name: Cari folder proyek
         id: find
         run: |
-          FILE=$(find . -name settings.gradle.kts | head -n 1)
+          FILE=$(find . -name settings.gradle.kts -not -path './.git/*' | head -n 1)
           if [ -z "$FILE" ]; then
             echo "settings.gradle.kts TIDAK DITEMUKAN. Isi repo:"
             find . -not -path './.git/*' | head -50
             exit 1
           fi
+          echo "Proyek ada di: $(dirname "$FILE")"
           echo "dir=$(dirname "$FILE")" >> "$GITHUB_OUTPUT"
 
       - name: Setup Java 17
