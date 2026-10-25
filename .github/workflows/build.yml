@@ -11,6 +11,17 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Cari folder proyek
+        id: find
+        run: |
+          FILE=$(find . -name settings.gradle.kts | head -n 1)
+          if [ -z "$FILE" ]; then
+            echo "settings.gradle.kts TIDAK DITEMUKAN. Isi repo:"
+            find . -not -path './.git/*' | head -50
+            exit 1
+          fi
+          echo "dir=$(dirname "$FILE")" >> "$GITHUB_OUTPUT"
+
       - name: Setup Java 17
         uses: actions/setup-java@v4
         with:
@@ -23,10 +34,11 @@ jobs:
           gradle-version: 8.9
 
       - name: Build debug APK
+        working-directory: ${{ steps.find.outputs.dir }}
         run: gradle :app:assembleDebug --no-daemon
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: EMENG-PROXXY-debug
-          path: app/build/outputs/apk/debug/*.apk
+          path: ${{ steps.find.outputs.dir }}/app/build/outputs/apk/debug/*.apk
